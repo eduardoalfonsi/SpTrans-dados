@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ônibus perto</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --bg: #F1F3F9;
+    --surface: #FFFFFF;
+    --outline: #DDE1E8;
+    --on-surface: #1B1B1F;
+    --on-surface-variant: #49454F;
+    --primary: #0B57D0;
+    --primary-container: #D3E3FD;
+    --green: #1E8E3E;
+    --green-container: #E6F4EA;
+    --orange: #E8710A;
+    --orange-container: #FEF0E1;
+    --black: #1F1F1F;
+    --black-container: #ECECEE;
+  }
+  :root[data-theme="dark"] {
+    --bg: #101317;
+    --surface: #1B1F24;
+    --outline: #33383F;
+    --on-surface: #E7E9EC;
+    --on-surface-variant: #A9AFB7;
+    --primary: #9DC0FF;
+    --primary-container: #27334A;
+    --green: #7BDB9A;
+    --green-container: #163723;
+    --orange: #FFB870;
+    --orange-container: #3A2812;
+    --black: #D7DADF;
+    --black-container: #2A2E33;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 420px; padding: 68px 16px 90px; }
+  .header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .icon-badge {
+    background: var(--primary-container);
+    border-radius: 999px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  h1 { font-size: 22px; font-weight: 500; color: var(--on-surface); margin: 0; }
+  .subtitle { font-size: 13px; color: var(--on-surface-variant); margin: 0 0 20px; }
+  .cards { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 1px 6px rgba(0,0,0,0.05);
+  }
+  .stop-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .stop-name { font-size: 14px; color: var(--on-surface-variant); }
+  .line-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+  .line-row-left { display: flex; align-items: center; gap: 8px; }
+  .line-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--primary-container);
+    color: var(--primary);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px; font-weight: 600;
+    line-height: 1.3;
+  }
+  .dest { font-size: 13px; color: var(--on-surface-variant); }
+  .primary-row { display: flex; align-items: flex-end; justify-content: space-between; }
+  .primary-time { font-size: 36px; font-weight: 500; line-height: 1; color: var(--on-surface); }
+  .primary-time.live { color: var(--green); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; padding: 4px 12px 4px 8px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+  .chip-label { font-size: 12px; font-weight: 500; }
+  .rest-list { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--outline); display: flex; flex-direction: column; gap: 10px; }
+  .rest-item { display: flex; align-items: center; justify-content: space-between; }
+  .rest-time { font-size: 14px; font-weight: 500; color: var(--on-surface); }
+  .rest-time.live { color: var(--green); }
+  .empty-msg { font-size: 13px; color: var(--on-surface-variant); }
+  .legend { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; padding: 0 4px; }
+  .legend p { font-size: 12px; line-height: 1.5; color: var(--on-surface-variant); margin: 0; }
+
+  .section-title { font-size: 16px; font-weight: 500; color: var(--on-surface); margin: 28px 0 12px; }
+  .section-title:first-of-type { margin-top: 0; }
+  .near-msg { font-size: 13px; color: var(--on-surface-variant); text-align: center; padding: 12px 0; }
+  .near-btn {
+    width: 100%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .stop-item {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .stop-item-name { font-size: 14px; color: var(--on-surface); }
+  .stop-item-dist { font-size: 12px; color: var(--on-surface-variant); white-space: nowrap; }
+  .back-btn {
+    background: none; border: none; color: var(--primary);
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    padding: 6px 0; margin-bottom: 14px; display: flex; align-items: center; gap: 4px;
+    cursor: pointer;
+  }
+  .star-btn {
+    background: none; border: none; font-size: 22px; line-height: 1;
+    padding: 4px; cursor: pointer; color: var(--on-surface-variant);
+  }
+  .star-btn.fav { color: #F5A623; }
+
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px;
+    background: var(--surface); border: 1px solid var(--outline);
+    border-radius: 999px; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; z-index: 10;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .search-toggle {
+    position: fixed; top: 16px; left: 16px;
+    background: var(--surface); border: 1px solid var(--outline);
+    border-radius: 999px; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; z-index: 10;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .search-input {
+    width: 100%; padding: 14px 16px; border-radius: 999px;
+    border: 1px solid var(--outline); background: var(--surface);
+    color: var(--on-surface); font-family: inherit; font-size: 15px;
+    margin-bottom: 18px;
+  }
+  .search-input:focus { outline: 2px solid var(--primary); }
+  .result-row {
+    background: var(--surface); border-radius: 16px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer;
+  }
+  .result-row .r-icon { font-size: 16px; }
+  .result-row .r-text { font-size: 14px; color: var(--on-surface); }
+  .result-row .r-sub { font-size: 12px; color: var(--on-surface-variant); }
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--outline);
+    display: flex; justify-content: center;
+  }
+  .bottom-nav-inner { width: 100%; max-width: 420px; display: flex; }
+  .nav-btn {
+    flex: 1; text-align: center; padding: 10px 0 8px;
+    background: none; border: none; font-family: inherit;
+    color: var(--on-surface-variant); font-size: 11px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    cursor: pointer;
+  }
+  .nav-btn .nav-icon { font-size: 20px; }
+  .nav-btn.active { color: var(--primary); font-weight: 600; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+<button class="search-toggle" onclick="goTo('#/buscar')">🔍</button>
+<div class="wrap" id="page"></div>
+
+<div class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="nav-btn" id="nav-home" onclick="goTo('#/')"><span class="nav-icon">🏠</span>Início</button>
+    <button class="nav-btn" id="nav-fav" onclick="goTo('#/favoritos')"><span class="nav-icon">⭐</span>Favoritos</button>
+  </div>
+</div>
+
+<script>
+var API_BASE_URL = "https://dusao.val.run";
+
+// ---------------------------------------------------------------------------
+// Tema claro/escuro: padrão escuro, salvo no navegador.
+// ---------------------------------------------------------------------------
+var THEME_KEY = "onibus_tema_v1";
+function aplicarTema(tema) {
+  document.documentElement.setAttribute("data-theme", tema);
+  var btn = document.getElementById("theme-toggle");
+  if (btn) btn.textContent = tema === "dark" ? "☀️" : "🌙";
+}
+function toggleTheme() {
+  var atual = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  localStorage.setItem(THEME_KEY, atual);
+  aplicarTema(atual);
+}
+(function () {
+  var salvo = null;
+  try { salvo = localStorage.getItem(THEME_KEY); } catch (e) {}
+  aplicarTema(salvo || "dark");
+})();
+
+// ---------------------------------------------------------------------------
+// Favoritos: lista de {stopId, stopName, lineCode, dest}, salva no navegador.
+// Começa com as duas linhas que já vínhamos acompanhando.
+// ---------------------------------------------------------------------------
+var FAVORITOS_KEY = "onibus_favoritos_v1";
+var DEFAULT_FAVORITOS = [
+  { stopId: "480014614", stopName: "Praça Cornélia", lineCode: "938C-10", dest: "Term. Princesa Isabel" },
+  { stopId: "480014601", stopName: "R. Faustolo, 645", lineCode: "978J-10", dest: "Term. Princesa Isabel" }
+];
+
+function loadFavoritos() {
+  try {
+    var raw = localStorage.getItem(FAVORITOS_KEY);
+    if (!raw) {
+      saveFavoritos(DEFAULT_FAVORITOS);
+      return DEFAULT_FAVORITOS.slice();
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    return DEFAULT_FAVORITOS.slice();
+  }
+}
+
+function saveFavoritos(arr) {
+  try { localStorage.setItem(FAVORITOS_KEY, JSON.stringify(arr)); } catch (e) {}
+}
+
+function isFavorito(stopId, lineCode) {
+  return favoritos.some(function (f) { return f.stopId === stopId && f.lineCode === lineCode; });
+}
+
+function toggleFavorito(fav) {
+  var idx = favoritos.findIndex(function (f) { return f.stopId === fav.stopId && f.lineCode === fav.lineCode; });
+  if (idx >= 0) favoritos.splice(idx, 1);
+  else favoritos.push(fav);
+  saveFavoritos(favoritos);
+}
+
+var favoritos = loadFavoritos();
+
+// ---------------------------------------------------------------------------
+// Utilidades de exibição (compartilhadas entre páginas)
+// ---------------------------------------------------------------------------
+function statusInfo(status) {
+  if (status === "live") return { label: "Ao vivo", color: "var(--green)", bg: "var(--green-container)" };
+  if (status === "stale") return { label: "Sinal fraco", color: "var(--orange)", bg: "var(--orange-container)" };
+  return { label: "Previsão", color: "var(--black)", bg: "var(--black-container)" }; // "tabela"
+}
+
+function fmtTime(min) {
+  if (min < 1) return "Chegando";
+  return Math.round(min) + " min";
+}
+
+function fmtDist(m) {
+  if (m < 1000) return m + " m";
+  return (m / 1000).toFixed(1) + " km";
+}
+
+// Card de uma linha numa parada: cabeçalho (nome da parada opcional + linha +
+// destino + estrela de favorito) e a lista de próximos ônibus (mesclando
+// ao vivo e tabela), igual ao que já funcionava pras duas linhas fixas.
+function buildLineCard(opts) {
+  // opts: { stopName, lineCode, dest, arrivals, stopId, showStar }
+  var card = document.createElement("div");
+  card.className = "card";
+
+  if (opts.stopName && !opts.hideStopRow) {
+    var stopRow = document.createElement("div");
+    stopRow.className = "stop-row";
+    stopRow.style.cursor = "pointer";
+    stopRow.innerHTML = '<span>📍</span><span class="stop-name" style="text-decoration: underline;">' + opts.stopName + '</span>';
+    stopRow.onclick = function () {
+      goTo("#/ponto/" + opts.stopId + "/" + encodeURIComponent(opts.stopName));
+    };
+    card.appendChild(stopRow);
+  }
+
+  var lineRow = document.createElement("div");
+  lineRow.className = "line-row";
+  var left = document.createElement("div");
+  left.className = "line-row-left";
+  var lineChip = document.createElement("span");
+  lineChip.className = "line-chip";
+  lineChip.style.cursor = "pointer";
+  lineChip.textContent = "🚌 " + opts.lineCode + (opts.dest ? " · " + opts.dest : "");
+  lineChip.onclick = function () {
+    goTo("#/linha/" + encodeURIComponent(opts.lineCode) + "/" + opts.stopId);
+  };
+  left.appendChild(lineChip);
+  lineRow.appendChild(left);
+
+  if (opts.showStar) {
+    var fav = isFavorito(opts.stopId, opts.lineCode);
+    var star = document.createElement("button");
+    star.className = "star-btn" + (fav ? " fav" : "");
+    star.textContent = fav ? "★" : "☆";
+    star.onclick = function () {
+      toggleFavorito({ stopId: opts.stopId, stopName: opts.stopName, lineCode: opts.lineCode, dest: opts.dest });
+      render();
+    };
+    lineRow.appendChild(star);
+  }
+  card.appendChild(lineRow);
+
+  var arrivals = opts.arrivals || [];
+  if (arrivals.length === 0) {
+    var empty = document.createElement("p");
+    empty.className = "empty-msg";
+    empty.textContent = "Sem previsão no momento para " + opts.lineCode + ".";
+    card.appendChild(empty);
+    return card;
+  }
+
+  var primary = arrivals[0];
+  var pStatus = statusInfo(primary.status);
+
+  var primaryRow = document.createElement("div");
+  primaryRow.className = "primary-row";
+  var timeEl = document.createElement("div");
+  timeEl.className = "primary-time" + (pStatus.label === "Ao vivo" ? " live" : "");
+  timeEl.textContent = fmtTime(primary.etaMin);
+  var chipEl = document.createElement("div");
+  chipEl.className = "chip";
+  chipEl.style.background = pStatus.bg;
+  chipEl.innerHTML =
+    '<span class="dot" style="background:' + pStatus.color + '"></span>' +
+    '<span class="chip-label" style="color:' + pStatus.color + '">' + pStatus.label + "</span>";
+  primaryRow.appendChild(timeEl);
+  primaryRow.appendChild(chipEl);
+  card.appendChild(primaryRow);
+
+  if (primary.status === "tabela") {
+    var quando = document.createElement("p");
+    quando.className = "empty-msg";
+    quando.style.marginTop = "4px";
+    quando.textContent = (primary.diaSeguinte ? "Amanhã, " : "Hoje, ") + primary.horario;
+    card.appendChild(quando);
+  }
+
+  if (arrivals.length > 1) {
+    var restList = document.createElement("div");
+    restList.className = "rest-list";
+    for (var i = 1; i < arrivals.length; i++) {
+      var a = arrivals[i];
+      var s = statusInfo(a.status);
+      var extra = a.status === "tabela" ? " (" + a.horario + ")" : "";
+      var item = document.createElement("div");
+      item.className = "rest-item";
+      item.innerHTML =
+        '<span class="rest-time' + (s.label === "Ao vivo" ? " live" : "") + '">' + fmtTime(a.etaMin) + extra + "</span>" +
+        '<div class="chip" style="background:' + s.bg + '">' +
+        '<span class="dot" style="background:' + s.color + '"></span>' +
+        '<span class="chip-label" style="color:' + s.color + '">' + s.label + "</span></div>";
+      restList.appendChild(item);
+    }
+    card.appendChild(restList);
+  }
+
+  return card;
+}
+
+function parseArrivals(data) {
+  return (data.proximosOnibus || []).map(function (v, i) {
+    return { key: v.prefixo || i, etaMin: v.etaMin || 0, status: v.status, horario: v.horario, diaSeguinte: v.diaSeguinte };
+  });
+}
+
+// Lembra o ônibus mais próximo de cada linha+parada (por prefixo do veículo).
+// Se ele sumir da lista ao vivo estando a 3 min ou menos, é bem provável que
+// chegou/passou — a API da SPTrans costuma tirar o veículo da lista nesse
+// momento, em vez de mostrar "0 min". Então seguramos um aviso de "Chegando"
+// por um tempinho, pra não pular direto pra próxima previsão.
+var lastSeenBus = {};
+
+function fetchArrivals(stopId, lineCode) {
+  var url = API_BASE_URL + "/parada/simples?codigoParada=" + stopId + "&linha=" + encodeURIComponent(lineCode);
+  return fetch(url).then(function (res) { return res.json(); }).then(parseArrivals).then(function (arrivals) {
+    var key = stopId + "|" + lineCode;
+    var liveAgora = arrivals.filter(function (a) { return a.status === "live" || a.status === "stale"; });
+
+    if (liveAgora.length > 0) {
+      var maisProximo = liveAgora[0];
+      for (var i = 1; i < liveAgora.length; i++) {
+        if (liveAgora[i].etaMin < maisProximo.etaMin) maisProximo = liveAgora[i];
+      }
+      lastSeenBus[key] = { prefixo: maisProximo.key, etaMin: maisProximo.etaMin, ts: Date.now() };
+    } else {
+      var prev = lastSeenBus[key];
+      if (prev && prev.etaMin <= 3 && Date.now() - prev.ts < 90000) {
+        arrivals = [{ key: prev.prefixo, etaMin: 0, status: "live" }].concat(arrivals);
+      } else if (prev) {
+        delete lastSeenBus[key];
+      }
+    }
+    return arrivals;
+  }).catch(function () { return []; });
+}
+
+// ---------------------------------------------------------------------------
+// Router simples baseado em hash: #/  #/favoritos  #/ponto/<codigoParada>/<nome>
+// ---------------------------------------------------------------------------
+function goTo(hash) { location.hash = hash; }
+
+function currentRoute() {
+  var h = location.hash || "#/";
+  if (h.indexOf("#/ponto/") === 0) {
+    var rest = h.slice("#/ponto/".length);
+    var slash = rest.indexOf("/");
+    var codigoParada = slash >= 0 ? rest.slice(0, slash) : rest;
+    var nome = slash >= 0 ? decodeURIComponent(rest.slice(slash + 1)) : "";
+    return { name: "ponto", codigoParada: codigoParada, nome: nome };
+  }
+  if (h.indexOf("#/linha/") === 0) {
+    var rest2 = h.slice("#/linha/".length);
+    var slash2 = rest2.indexOf("/");
+    var letreiro = slash2 >= 0 ? decodeURIComponent(rest2.slice(0, slash2)) : decodeURIComponent(rest2);
+    var stopIdRef = slash2 >= 0 ? rest2.slice(slash2 + 1) : "";
+    return { name: "linha", letreiro: letreiro, stopIdRef: stopIdRef };
+  }
+  if (h === "#/favoritos") return { name: "favoritos" };
+  if (h === "#/buscar") return { name: "buscar" };
+  return { name: "home" };
+}
+
+var refreshTimer = null;
+function setRefresh(fn) {
+  if (refreshTimer) clearInterval(refreshTimer);
+  if (fn) refreshTimer = setInterval(fn, 15000);
+}
+
+function render() {
+  var route = currentRoute();
+  document.getElementById("nav-home").className = "nav-btn" + (route.name === "home" ? " active" : "");
+  document.getElementById("nav-fav").className = "nav-btn" + (route.name === "favoritos" ? " active" : "");
+
+  if (route.name === "home") renderHome();
+  else if (route.name === "favoritos") renderFavoritos();
+  else if (route.name === "ponto") renderPonto(route.codigoParada, route.nome);
+  else if (route.name === "linha") renderLinha(route.letreiro, route.stopIdRef);
+  else if (route.name === "buscar") renderBusca();
+}
+
+// ---------------------------------------------------------------------------
+// Página: Início (favoritos + 5 paradas mais próximas)
+// ---------------------------------------------------------------------------
+var nearState = { status: "idle", paradas: [] }; // idle | loading | ok | error
+
+function renderHome() {
+  var page = document.getElementById("page");
+  page.innerHTML =
+    '<div class="header"><div class="icon-badge">🚌</div><h1>Ônibus perto</h1></div>' +
+    '<p class="subtitle">Suas linhas e paradas por perto</p>' +
+    '<div class="section-title">⭐ Favoritos</div>' +
+    '<div class="cards" id="fav-cards"></div>' +
+    '<div class="section-title">📍 Perto de você</div>' +
+    '<div id="near"></div>';
+
+  renderFavCardsInto("fav-cards");
+  renderNearSection();
+  setRefresh(function () { renderFavCardsInto("fav-cards"); });
+
+  if (nearState.status === "idle") buscarParadasPerto();
+}
+
+function renderFavCardsInto(containerId, showStar) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  if (favoritos.length === 0) {
+    container.innerHTML = '<p class="empty-msg">Você ainda não tem linhas favoritas. Toque numa parada pra favoritar uma.</p>';
+    return;
+  }
+  Promise.all(favoritos.map(function (f) { return fetchArrivals(f.stopId, f.lineCode); })).then(function (results) {
+    container.innerHTML = "";
+    favoritos.forEach(function (f, i) {
+      container.appendChild(buildLineCard({
+        stopName: f.stopName, lineCode: f.lineCode, dest: f.dest, arrivals: results[i],
+        stopId: f.stopId, showStar: !!showStar
+      }));
+    });
+  });
+}
+
+function renderNearSection() {
+  var el = document.getElementById("near");
+  if (!el) return;
+  if (nearState.status === "loading") {
+    el.innerHTML = '<p class="near-msg">Buscando paradas perto de você…</p>';
+  } else if (nearState.status === "error") {
+    el.innerHTML = '<p class="near-msg">Não consegui acessar sua localização.</p>' +
+      '<button class="near-btn" id="retry-near">Tentar de novo</button>';
+    document.getElementById("retry-near").onclick = buscarParadasPerto;
+  } else if (nearState.status === "ok") {
+    if (nearState.paradas.length === 0) {
+      el.innerHTML = '<p class="near-msg">Nenhuma parada encontrada perto de você.</p>';
+      return;
+    }
+    el.innerHTML = "";
+    nearState.paradas.forEach(function (p) {
+      var item = document.createElement("div");
+      item.className = "stop-item";
+      item.innerHTML =
+        '<span class="stop-item-name">' + p.nome + "</span>" +
+        '<span class="stop-item-dist">' + fmtDist(p.distanciaM) + "</span>";
+      item.onclick = function () {
+        goTo("#/ponto/" + p.codigoParada + "/" + encodeURIComponent(p.nome));
+      };
+      el.appendChild(item);
+    });
+  } else {
+    el.innerHTML = '<button class="near-btn" id="use-loc">📍 Usar minha localização</button>';
+    document.getElementById("use-loc").onclick = buscarParadasPerto;
+  }
+}
+
+function buscarParadasPerto() {
+  if (!navigator.geolocation) {
+    nearState = { status: "error", paradas: [] };
+    renderNearSection();
+    return;
+  }
+  nearState.status = "loading";
+  renderNearSection();
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      var lat = pos.coords.latitude, lon = pos.coords.longitude;
+      fetch(API_BASE_URL + "/parada/perto?lat=" + lat + "&lon=" + lon + "&limite=5")
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          nearState = { status: "ok", paradas: data.paradas || [] };
+          renderNearSection();
+        })
+        .catch(function () {
+          nearState = { status: "error", paradas: [] };
+          renderNearSection();
+        });
+    },
+    function () {
+      nearState = { status: "error", paradas: [] };
+      renderNearSection();
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Página: Favoritos (todas as linhas favoritadas)
+// ---------------------------------------------------------------------------
+function renderFavoritos() {
+  var page = document.getElementById("page");
+  page.innerHTML =
+    '<div class="header"><div class="icon-badge">⭐</div><h1>Favoritos</h1></div>' +
+    '<p class="subtitle">Todas as linhas que você favoritou</p>' +
+    '<div class="cards" id="fav-cards-page"></div>';
+  renderFavCardsInto("fav-cards-page", true);
+  setRefresh(function () { renderFavCardsInto("fav-cards-page", true); });
+}
+
+// ---------------------------------------------------------------------------
+// Página: Ponto (todas as linhas que passam numa parada, com estrela)
+// ---------------------------------------------------------------------------
+function renderPonto(codigoParada, nome) {
+  var page = document.getElementById("page");
+  page.innerHTML =
+    '<button class="back-btn" onclick="history.back()">‹ Voltar</button>' +
+    '<div class="header"><div class="icon-badge">📍</div><h1>' + (nome || "Parada") + '</h1></div>' +
+    '<p class="subtitle">Ônibus que passam aqui</p>' +
+    '<div class="cards" id="ponto-cards"><p class="near-msg">Carregando linhas…</p></div>';
+
+  carregarPonto(codigoParada, nome);
+  setRefresh(function () { carregarPonto(codigoParada, nome); });
+}
+
+function carregarPonto(codigoParada, nome) {
+  fetch(API_BASE_URL + "/parada/completa?codigoParada=" + codigoParada)
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      var linhas = data.linhasAtendidas || [];
+      var container = document.getElementById("ponto-cards");
+      if (!container) return; // usuário já navegou pra outra página
+      if (linhas.length === 0) {
+        container.innerHTML = '<p class="empty-msg">Nenhuma linha encontrada nessa parada agora.</p>';
+        return;
+      }
+      Promise.all(linhas.map(function (l) { return fetchArrivals(codigoParada, l.letreiro); })).then(function (results) {
+        container.innerHTML = "";
+        linhas.forEach(function (l, i) {
+          var arrivals = (results[i] || []).slice(0, 3);
+          container.appendChild(buildLineCard({
+            lineCode: l.letreiro, dest: l.destino, arrivals: arrivals,
+            stopId: codigoParada, stopName: nome, hideStopRow: true, showStar: true
+          }));
+        });
+      });
+    })
+    .catch(function () {
+      var container = document.getElementById("ponto-cards");
+      if (container) container.innerHTML = '<p class="empty-msg">Não consegui carregar essa parada agora.</p>';
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Página: Linha (todas as paradas de uma linha, com a mais próxima em destaque)
+// ---------------------------------------------------------------------------
+function distanciaMetrosLocal(lat1, lon1, lat2, lon2) {
+  var R = 6371000;
+  var rad = function (x) { return (x * Math.PI) / 180; };
+  var dLat = rad(lat2 - lat1), dLon = rad(lon2 - lon1);
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function renderLinha(letreiro, stopIdRef) {
+  var page = document.getElementById("page");
+  page.innerHTML =
+    '<button class="back-btn" onclick="history.back()">‹ Voltar</button>' +
+    '<div class="header"><div class="icon-badge">🚌</div><h1>' + letreiro + '</h1></div>' +
+    '<p class="subtitle" id="linha-subtitle">Carregando paradas…</p>' +
+    '<div id="linha-cards" class="cards"><p class="near-msg">Carregando…</p></div>';
+  setRefresh(null);
+
+  fetch(API_BASE_URL + "/linha/detalhe?letreiro=" + encodeURIComponent(letreiro) + "&codigoParadaRef=" + (stopIdRef || ""))
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      var container = document.getElementById("linha-cards");
+      var subtitle = document.getElementById("linha-subtitle");
+      if (!container) return;
+      var paradas = data.paradas || [];
+      if (paradas.length === 0) {
+        container.innerHTML = '<p class="empty-msg">Não encontrei as paradas dessa linha.</p>';
+        return;
+      }
+      if (subtitle) subtitle.textContent = "→ " + (data.destino || "") + " · " + paradas.length + " paradas";
+
+      function renderLista(idNaMaisProxima) {
+        container.innerHTML = "";
+        paradas.forEach(function (p) {
+          var destaque = p.codigoParada === idNaMaisProxima;
+          var card = document.createElement("div");
+          card.className = "card";
+          if (destaque) card.style.border = "2px solid var(--primary)";
+
+          if (destaque) {
+            var badge = document.createElement("p");
+            badge.style.cssText = "font-size:12px;font-weight:600;color:var(--primary);margin:0 0 8px;";
+            badge.textContent = "📍 Mais próxima de você";
+            card.appendChild(badge);
+          }
+
+          var row = document.createElement("div");
+          row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:8px;";
+
+          var nome = document.createElement("span");
+          nome.className = "stop-name";
+          nome.style.cssText = "text-decoration: underline; cursor: pointer; color: var(--on-surface);";
+          nome.textContent = p.nome;
+          nome.onclick = function () {
+            goTo("#/ponto/" + p.codigoParada + "/" + encodeURIComponent(p.nome));
+          };
+          row.appendChild(nome);
+
+          var fav = isFavorito(p.codigoParada, letreiro);
+          var star = document.createElement("button");
+          star.className = "star-btn" + (fav ? " fav" : "");
+          star.textContent = fav ? "★" : "☆";
+          star.onclick = function () {
+            toggleFavorito({ stopId: p.codigoParada, stopName: p.nome, lineCode: letreiro, dest: data.destino });
+            renderLista(idNaMaisProxima);
+          };
+          row.appendChild(star);
+
+          card.appendChild(row);
+          container.appendChild(card);
+        });
+      }
+
+      function ativarAtualizacao(idNaMaisProxima) {
+        renderLista(idNaMaisProxima);
+        setRefresh(function () { renderLista(idNaMaisProxima); });
+      }
+
+      // Tenta achar a parada mais próxima da localização atual do usuário;
+      // se não conseguir, usa a parada de onde ele veio como referência.
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            var lat = pos.coords.latitude, lon = pos.coords.longitude;
+            var comCoord = paradas.filter(function (p) { return typeof p.lat === "number" && typeof p.lon === "number"; });
+            if (comCoord.length === 0) { ativarAtualizacao(stopIdRef); return; }
+            var maisProxima = comCoord.reduce(function (best, p) {
+              var d = distanciaMetrosLocal(lat, lon, p.lat, p.lon);
+              return (!best || d < best.d) ? { p: p, d: d } : best;
+            }, null);
+            ativarAtualizacao(maisProxima ? maisProxima.p.codigoParada : stopIdRef);
+          },
+          function () { ativarAtualizacao(stopIdRef); },
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      } else {
+        ativarAtualizacao(stopIdRef);
+      }
+    })
+    .catch(function () {
+      var container = document.getElementById("linha-cards");
+      if (container) container.innerHTML = '<p class="empty-msg">Não consegui carregar essa linha agora.</p>';
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Página: Busca (por código de linha, nome de linha ou nome/endereço de parada)
+// ---------------------------------------------------------------------------
+var buscaTimer = null;
+
+function renderBusca() {
+  var page = document.getElementById("page");
+  page.innerHTML =
+    '<button class="back-btn" onclick="history.back()">‹ Voltar</button>' +
+    '<div class="header"><div class="icon-badge">🔍</div><h1>Buscar</h1></div>' +
+    '<p class="subtitle">Código de linha, nome da linha ou parada</p>' +
+    '<input type="text" class="search-input" id="busca-input" placeholder="Ex: 938C-10, Faustolo, Paulista…" autofocus />' +
+    '<div id="busca-results"></div>';
+  setRefresh(null);
+
+  var input = document.getElementById("busca-input");
+  input.focus();
+  input.addEventListener("input", function () {
+    var termo = input.value.trim();
+    clearTimeout(buscaTimer);
+    if (termo.length < 2) {
+      document.getElementById("busca-results").innerHTML = "";
+      return;
+    }
+    buscaTimer = setTimeout(function () { executarBusca(termo); }, 400);
+  });
+}
+
+function executarBusca(termo) {
+  var results = document.getElementById("busca-results");
+  if (!results) return;
+  results.innerHTML = '<p class="near-msg">Buscando…</p>';
+  fetch(API_BASE_URL + "/buscar?termo=" + encodeURIComponent(termo))
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      results = document.getElementById("busca-results");
+      if (!results) return;
+      var linhas = data.linhas || [];
+      var paradas = data.paradas || [];
+      if (linhas.length === 0 && paradas.length === 0) {
+        results.innerHTML = '<p class="near-msg">Nada encontrado pra "' + termo + '".</p>';
+        return;
+      }
+      results.innerHTML = "";
+      linhas.forEach(function (l) {
+        var row = document.createElement("div");
+        row.className = "result-row";
+        row.innerHTML =
+          '<span class="r-icon">🚌</span><div><div class="r-text">' + l.letreiro + '</div>' +
+          '<div class="r-sub">→ ' + (l.destino || "") + '</div></div>';
+        row.onclick = function () { goTo("#/linha/" + encodeURIComponent(l.letreiro) + "/"); };
+        results.appendChild(row);
+      });
+      paradas.forEach(function (p) {
+        var row = document.createElement("div");
+        row.className = "result-row";
+        row.innerHTML = '<span class="r-icon">📍</span><div class="r-text">' + p.nome + "</div>";
+        row.onclick = function () { goTo("#/ponto/" + p.codigoParada + "/" + encodeURIComponent(p.nome)); };
+        results.appendChild(row);
+      });
+    })
+    .catch(function () {
+      var el = document.getElementById("busca-results");
+      if (el) el.innerHTML = '<p class="near-msg">Não consegui buscar agora. Tenta de novo.</p>';
+    });
+}
+
+window.addEventListener("hashchange", render);
+render();
+</script>
+</body>
+</html>
