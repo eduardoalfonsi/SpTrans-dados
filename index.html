@@ -228,12 +228,12 @@ function loadFavoritos() {
   try {
     var raw = localStorage.getItem(FAVORITOS_KEY);
     if (!raw) {
-      saveFavoritos(DEFAULT_FAVORITOS);
-      return DEFAULT_FAVORITOS.slice();
+      saveFavoritos([]);
+      return [];
     }
     return JSON.parse(raw);
   } catch (e) {
-    return DEFAULT_FAVORITOS.slice();
+    return [];
   }
 }
 
