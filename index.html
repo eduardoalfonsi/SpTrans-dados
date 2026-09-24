@@ -68,10 +68,11 @@
   .card-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
   .card-row + .card-row { margin-top: 6px; }
   .card-left-text { flex: 1 1 0; font-size: 17px; font-weight: 500; color: var(--on-surface); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-left-wrap { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: unset; }
   .line-chip-text { font-size: 15px; font-weight: 400; color: var(--on-surface-variant); }
   .card-right-top { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .primary-time { font-size: 22px; font-weight: 600; line-height: 1; color: var(--on-surface); }
-  .primary-time .time-unit { font-size: 13px; font-weight: 500; margin-left: 2px; }
+  .primary-time .time-unit { font-size: 13px; font-weight: 700; margin-left: 2px; }
   .next-times { font-size: 14px; font-weight: 500; flex-shrink: 0; }
   .empty-msg { font-size: 13px; color: var(--on-surface-variant); }
   .legend { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; padding: 0 4px; }
@@ -292,14 +293,25 @@ function buildLineCard(opts) {
   row1.className = "card-row";
 
   var stopNameEl = document.createElement("div");
-  stopNameEl.className = "card-left-text";
-  if (opts.stopName && !opts.hideStopRow) {
-    stopNameEl.textContent = opts.stopName;
+  if (opts.hideStopRow) {
+    // Página de Estação: não repete o nome da parada (já é o título da página).
+    // No lugar, sobe a linha de ônibus pra cá, podendo quebrar em até 2 linhas.
+    stopNameEl.className = "card-left-text card-left-wrap";
     stopNameEl.style.cursor = "pointer";
-    stopNameEl.style.textDecoration = "underline";
+    stopNameEl.textContent = opts.lineCode + (opts.dest ? " · " + opts.dest : "");
     stopNameEl.onclick = function () {
-      goTo("#/ponto/" + opts.stopId + "/" + encodeURIComponent(opts.stopName));
+      goTo("#/linha/" + encodeURIComponent(opts.lineCode) + "/" + opts.stopId);
     };
+  } else {
+    stopNameEl.className = "card-left-text";
+    if (opts.stopName) {
+      stopNameEl.textContent = opts.stopName;
+      stopNameEl.style.cursor = "pointer";
+      stopNameEl.style.textDecoration = "underline";
+      stopNameEl.onclick = function () {
+        goTo("#/ponto/" + opts.stopId + "/" + encodeURIComponent(opts.stopName));
+      };
+    }
   }
   row1.appendChild(stopNameEl);
 
@@ -340,12 +352,14 @@ function buildLineCard(opts) {
   row2.className = "card-row";
 
   var lineChip = document.createElement("div");
-  lineChip.className = "card-left-text line-chip-text";
-  lineChip.style.cursor = "pointer";
-  lineChip.textContent = opts.lineCode + (opts.dest ? " · " + opts.dest : "");
-  lineChip.onclick = function () {
-    goTo("#/linha/" + encodeURIComponent(opts.lineCode) + "/" + opts.stopId);
-  };
+  if (!opts.hideStopRow) {
+    lineChip.className = "card-left-text line-chip-text";
+    lineChip.style.cursor = "pointer";
+    lineChip.textContent = opts.lineCode + (opts.dest ? " · " + opts.dest : "");
+    lineChip.onclick = function () {
+      goTo("#/linha/" + encodeURIComponent(opts.lineCode) + "/" + opts.stopId);
+    };
+  }
   row2.appendChild(lineChip);
 
   var restEl = document.createElement("div");
@@ -598,10 +612,16 @@ function carregarPonto(codigoParada, nome) {
       }
       Promise.all(linhas.map(function (l) { return fetchArrivals(codigoParada, l.letreiro); })).then(function (results) {
         container.innerHTML = "";
-        linhas.forEach(function (l, i) {
-          var arrivals = (results[i] || []).slice(0, 3);
+        var combinado = linhas.map(function (l, i) { return { linha: l, arrivals: results[i] || [] }; });
+        combinado.sort(function (a, b) {
+          var etaA = a.arrivals.length > 0 ? a.arrivals[0].etaMin : Infinity;
+          var etaB = b.arrivals.length > 0 ? b.arrivals[0].etaMin : Infinity;
+          return etaA - etaB;
+        });
+        combinado.forEach(function (item) {
+          var arrivals = item.arrivals.slice(0, 3);
           container.appendChild(buildLineCard({
-            lineCode: l.letreiro, dest: l.destino, arrivals: arrivals,
+            lineCode: item.linha.letreiro, dest: item.linha.destino, arrivals: arrivals,
             stopId: codigoParada, stopName: nome, hideStopRow: true, showStar: true
           }));
         });
