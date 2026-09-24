@@ -65,31 +65,13 @@
   }
   .stop-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .stop-name { font-size: 14px; color: var(--on-surface-variant); }
-  .line-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
-  .line-row-left { display: flex; align-items: center; gap: 8px; }
-  .line-chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--primary-container);
-    color: var(--primary);
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 13px; font-weight: 600;
-    line-height: 1.3;
-  }
-  .dest { font-size: 13px; color: var(--on-surface-variant); }
-  .primary-row { display: flex; align-items: flex-end; justify-content: space-between; }
-  .primary-time { font-size: 36px; font-weight: 500; line-height: 1; color: var(--on-surface); }
-  .primary-time.live { color: var(--green); }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    border-radius: 999px; padding: 4px 12px 4px 8px;
-  }
-  .dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
-  .chip-label { font-size: 12px; font-weight: 500; }
-  .rest-list { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--outline); display: flex; flex-direction: column; gap: 10px; }
-  .rest-item { display: flex; align-items: center; justify-content: space-between; }
-  .rest-time { font-size: 14px; font-weight: 500; color: var(--on-surface); }
-  .rest-time.live { color: var(--green); }
+  .card-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .card-row + .card-row { margin-top: 6px; }
+  .card-left-text { font-size: 17px; font-weight: 500; color: var(--on-surface); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .line-chip-text { font-size: 15px; font-weight: 400; color: var(--on-surface-variant); }
+  .card-right-top { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .primary-time { font-size: 26px; font-weight: 600; line-height: 1; color: var(--on-surface); }
+  .next-times { font-size: 14px; font-weight: 500; flex-shrink: 0; }
   .empty-msg { font-size: 13px; color: var(--on-surface-variant); }
   .legend { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; padding: 0 4px; }
   .legend p { font-size: 12px; line-height: 1.5; color: var(--on-surface-variant); margin: 0; }
@@ -264,7 +246,7 @@ function statusInfo(status) {
 }
 
 function fmtTime(min) {
-  if (min < 1) return "Chegando";
+  if (min < 1) return "Agora";
   return Math.round(min) + " min";
 }
 
@@ -277,50 +259,23 @@ function fmtDist(m) {
 // destino + estrela de favorito) e a lista de próximos ônibus (mesclando
 // ao vivo e tabela), igual ao que já funcionava pras duas linhas fixas.
 function buildLineCard(opts) {
-  // opts: { stopName, lineCode, dest, arrivals, stopId, showStar }
+  // opts: { stopName, lineCode, dest, arrivals, stopId, showStar, hideStopRow }
   var card = document.createElement("div");
   card.className = "card";
 
-  if (opts.stopName && !opts.hideStopRow) {
-    var stopRow = document.createElement("div");
-    stopRow.className = "stop-row";
-    stopRow.style.cursor = "pointer";
-    stopRow.innerHTML = '<span>📍</span><span class="stop-name" style="text-decoration: underline;">' + opts.stopName + '</span>';
-    stopRow.onclick = function () {
-      goTo("#/ponto/" + opts.stopId + "/" + encodeURIComponent(opts.stopName));
-    };
-    card.appendChild(stopRow);
-  }
-
-  var lineRow = document.createElement("div");
-  lineRow.className = "line-row";
-  var left = document.createElement("div");
-  left.className = "line-row-left";
-  var lineChip = document.createElement("span");
-  lineChip.className = "line-chip";
-  lineChip.style.cursor = "pointer";
-  lineChip.textContent = "🚌 " + opts.lineCode + (opts.dest ? " · " + opts.dest : "");
-  lineChip.onclick = function () {
-    goTo("#/linha/" + encodeURIComponent(opts.lineCode) + "/" + opts.stopId);
-  };
-  left.appendChild(lineChip);
-  lineRow.appendChild(left);
-
-  if (opts.showStar) {
-    var fav = isFavorito(opts.stopId, opts.lineCode);
-    var star = document.createElement("button");
-    star.className = "star-btn" + (fav ? " fav" : "");
-    star.textContent = fav ? "★" : "☆";
-    star.onclick = function () {
-      toggleFavorito({ stopId: opts.stopId, stopName: opts.stopName, lineCode: opts.lineCode, dest: opts.dest });
-      render();
-    };
-    lineRow.appendChild(star);
-  }
-  card.appendChild(lineRow);
-
   var arrivals = opts.arrivals || [];
+
   if (arrivals.length === 0) {
+    if (opts.stopName && !opts.hideStopRow) {
+      var stopRowEmpty = document.createElement("div");
+      stopRowEmpty.className = "stop-row";
+      stopRowEmpty.style.cursor = "pointer";
+      stopRowEmpty.innerHTML = '<span class="stop-name" style="text-decoration: underline;">' + opts.stopName + "</span>";
+      stopRowEmpty.onclick = function () {
+        goTo("#/ponto/" + opts.stopId + "/" + encodeURIComponent(opts.stopName));
+      };
+      card.appendChild(stopRowEmpty);
+    }
     var empty = document.createElement("p");
     empty.className = "empty-msg";
     empty.textContent = "Sem previsão no momento para " + opts.lineCode + ".";
@@ -331,46 +286,86 @@ function buildLineCard(opts) {
   var primary = arrivals[0];
   var pStatus = statusInfo(primary.status);
 
-  var primaryRow = document.createElement("div");
-  primaryRow.className = "primary-row";
+  // Linha 1: estação (esquerda) + horário principal e estrela (direita)
+  var row1 = document.createElement("div");
+  row1.className = "card-row";
+
+  var stopNameEl = document.createElement("div");
+  stopNameEl.className = "card-left-text";
+  if (opts.stopName && !opts.hideStopRow) {
+    stopNameEl.textContent = opts.stopName;
+    stopNameEl.style.cursor = "pointer";
+    stopNameEl.style.textDecoration = "underline";
+    stopNameEl.onclick = function () {
+      goTo("#/ponto/" + opts.stopId + "/" + encodeURIComponent(opts.stopName));
+    };
+  }
+  row1.appendChild(stopNameEl);
+
+  var row1Right = document.createElement("div");
+  row1Right.className = "card-right-top";
   var timeEl = document.createElement("div");
-  timeEl.className = "primary-time" + (pStatus.label === "Ao vivo" ? " live" : "");
+  timeEl.className = "primary-time";
+  timeEl.style.color = pStatus.color;
   timeEl.textContent = fmtTime(primary.etaMin);
-  var chipEl = document.createElement("div");
-  chipEl.className = "chip";
-  chipEl.style.background = pStatus.bg;
-  chipEl.innerHTML =
-    '<span class="dot" style="background:' + pStatus.color + '"></span>' +
-    '<span class="chip-label" style="color:' + pStatus.color + '">' + pStatus.label + "</span>";
-  primaryRow.appendChild(timeEl);
-  primaryRow.appendChild(chipEl);
-  card.appendChild(primaryRow);
+  row1Right.appendChild(timeEl);
+
+  if (opts.showStar) {
+    var fav = isFavorito(opts.stopId, opts.lineCode);
+    var star = document.createElement("button");
+    star.className = "star-btn" + (fav ? " fav" : "");
+    star.textContent = fav ? "★" : "☆";
+    star.onclick = function () {
+      toggleFavorito({ stopId: opts.stopId, stopName: opts.stopName, lineCode: opts.lineCode, dest: opts.dest });
+      render();
+    };
+    row1Right.appendChild(star);
+  }
+  row1.appendChild(row1Right);
+  card.appendChild(row1);
+
+  // Linha 2: linha de ônibus (esquerda) + próximas 2 previsões (direita)
+  var row2 = document.createElement("div");
+  row2.className = "card-row";
+
+  var lineChip = document.createElement("div");
+  lineChip.className = "card-left-text line-chip-text";
+  lineChip.style.cursor = "pointer";
+  lineChip.textContent = "🚌 " + opts.lineCode + (opts.dest ? " · " + opts.dest : "");
+  lineChip.onclick = function () {
+    goTo("#/linha/" + encodeURIComponent(opts.lineCode) + "/" + opts.stopId);
+  };
+  row2.appendChild(lineChip);
+
+  var restEl = document.createElement("div");
+  restEl.className = "next-times";
+  if (arrivals.length > 1) {
+    var parts = [];
+    for (var i = 1; i < arrivals.length && i <= 2; i++) {
+      parts.push({ text: (arrivals[i].etaMin < 1 ? "Agora" : Math.round(arrivals[i].etaMin)), color: statusInfo(arrivals[i].status).color });
+    }
+    parts.forEach(function (p, idx) {
+      var span = document.createElement("span");
+      span.style.color = p.color;
+      span.textContent = p.text;
+      restEl.appendChild(span);
+      if (idx < parts.length - 1) {
+        var sep = document.createElement("span");
+        sep.style.color = "var(--on-surface-variant)";
+        sep.textContent = ", ";
+        restEl.appendChild(sep);
+      }
+    });
+  }
+  row2.appendChild(restEl);
+  card.appendChild(row2);
 
   if (primary.status === "tabela") {
     var quando = document.createElement("p");
     quando.className = "empty-msg";
-    quando.style.marginTop = "4px";
+    quando.style.marginTop = "2px";
     quando.textContent = (primary.diaSeguinte ? "Amanhã, " : "Hoje, ") + primary.horario;
     card.appendChild(quando);
-  }
-
-  if (arrivals.length > 1) {
-    var restList = document.createElement("div");
-    restList.className = "rest-list";
-    for (var i = 1; i < arrivals.length; i++) {
-      var a = arrivals[i];
-      var s = statusInfo(a.status);
-      var extra = a.status === "tabela" ? " (" + a.horario + ")" : "";
-      var item = document.createElement("div");
-      item.className = "rest-item";
-      item.innerHTML =
-        '<span class="rest-time' + (s.label === "Ao vivo" ? " live" : "") + '">' + fmtTime(a.etaMin) + extra + "</span>" +
-        '<div class="chip" style="background:' + s.bg + '">' +
-        '<span class="dot" style="background:' + s.color + '"></span>' +
-        '<span class="chip-label" style="color:' + s.color + '">' + s.label + "</span></div>";
-      restList.appendChild(item);
-    }
-    card.appendChild(restList);
   }
 
   return card;
@@ -467,10 +462,10 @@ function renderHome() {
   page.innerHTML =
     '<div class="header"><div class="icon-badge">🚌</div><h1>Ônibus perto</h1></div>' +
     '<p class="subtitle">Suas linhas e paradas por perto</p>' +
-    '<div class="section-title">⭐ Favoritos</div>' +
-    '<div class="cards" id="fav-cards"></div>' +
     '<div class="section-title">📍 Perto de você</div>' +
-    '<div id="near"></div>';
+    '<div id="near"></div>' +
+    '<div class="section-title">⭐ Favoritos</div>' +
+    '<div class="cards" id="fav-cards"></div>';
 
   renderFavCardsInto("fav-cards");
   renderNearSection();
