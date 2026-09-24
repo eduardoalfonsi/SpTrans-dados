@@ -67,10 +67,11 @@
   .stop-name { font-size: 14px; color: var(--on-surface-variant); }
   .card-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
   .card-row + .card-row { margin-top: 6px; }
-  .card-left-text { font-size: 17px; font-weight: 500; color: var(--on-surface); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-left-text { flex: 1 1 0; font-size: 17px; font-weight: 500; color: var(--on-surface); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .line-chip-text { font-size: 15px; font-weight: 400; color: var(--on-surface-variant); }
   .card-right-top { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .primary-time { font-size: 26px; font-weight: 600; line-height: 1; color: var(--on-surface); }
+  .primary-time { font-size: 22px; font-weight: 600; line-height: 1; color: var(--on-surface); }
+  .primary-time .time-unit { font-size: 13px; font-weight: 500; margin-left: 2px; }
   .next-times { font-size: 14px; font-weight: 500; flex-shrink: 0; }
   .empty-msg { font-size: 13px; color: var(--on-surface-variant); }
   .legend { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; padding: 0 4px; }
@@ -307,7 +308,17 @@ function buildLineCard(opts) {
   var timeEl = document.createElement("div");
   timeEl.className = "primary-time";
   timeEl.style.color = pStatus.color;
-  timeEl.textContent = fmtTime(primary.etaMin);
+  if (primary.etaMin < 1) {
+    timeEl.textContent = "Agora";
+  } else {
+    var numSpan = document.createElement("span");
+    numSpan.textContent = Math.round(primary.etaMin);
+    var unitSpan = document.createElement("span");
+    unitSpan.className = "time-unit";
+    unitSpan.textContent = "min";
+    timeEl.appendChild(numSpan);
+    timeEl.appendChild(unitSpan);
+  }
   row1Right.appendChild(timeEl);
 
   if (opts.showStar) {
@@ -331,7 +342,7 @@ function buildLineCard(opts) {
   var lineChip = document.createElement("div");
   lineChip.className = "card-left-text line-chip-text";
   lineChip.style.cursor = "pointer";
-  lineChip.textContent = "🚌 " + opts.lineCode + (opts.dest ? " · " + opts.dest : "");
+  lineChip.textContent = opts.lineCode + (opts.dest ? " · " + opts.dest : "");
   lineChip.onclick = function () {
     goTo("#/linha/" + encodeURIComponent(opts.lineCode) + "/" + opts.stopId);
   };
@@ -359,14 +370,6 @@ function buildLineCard(opts) {
   }
   row2.appendChild(restEl);
   card.appendChild(row2);
-
-  if (primary.status === "tabela") {
-    var quando = document.createElement("p");
-    quando.className = "empty-msg";
-    quando.style.marginTop = "2px";
-    quando.textContent = (primary.diaSeguinte ? "Amanhã, " : "Hoje, ") + primary.horario;
-    card.appendChild(quando);
-  }
 
   return card;
 }
