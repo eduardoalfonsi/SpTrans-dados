@@ -164,14 +164,14 @@
 </style>
 </head>
 <body>
-<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
-<button class="search-toggle" onclick="goTo('#/buscar')">🔍</button>
+<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()"></button>
+<button class="search-toggle" onclick="goTo('#/buscar')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
 <div class="wrap" id="page"></div>
 
 <div class="bottom-nav">
   <div class="bottom-nav-inner">
-    <button class="nav-btn" id="nav-home" onclick="goTo('#/')"><span class="nav-icon">🏠</span>Início</button>
-    <button class="nav-btn" id="nav-fav" onclick="goTo('#/favoritos')"><span class="nav-icon">⭐</span>Favoritos</button>
+    <button class="nav-btn" id="nav-home" onclick="goTo('#/')"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>Início</button>
+    <button class="nav-btn" id="nav-fav" onclick="goTo('#/favoritos')"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>Favoritos</button>
   </div>
 </div>
 
@@ -185,13 +185,22 @@ var THEME_KEY = "onibus_tema_v1";
 function aplicarTema(tema) {
   document.documentElement.setAttribute("data-theme", tema);
   var btn = document.getElementById("theme-toggle");
-  if (btn) btn.textContent = tema === "dark" ? "☀️" : "🌙";
+  if (btn) btn.innerHTML = tema === "dark" ? ICON_SUN : ICON_MOON;
 }
 function toggleTheme() {
   var atual = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
   localStorage.setItem(THEME_KEY, atual);
   aplicarTema(atual);
 }
+
+var ICON_PIN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+var ICON_BUS = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2c-4.42 0-8 .5-8 4v10c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4zm5.66 2.99H6.34C6.89 4.46 8.31 4 12 4s5.11.46 5.66.99zm.34 2V10H6V6.99h12zm-.34 9.74-.29.27H6.63l-.29-.27A.968.968 0 016 16v-4h12v4c0 .37-.21.62-.34.73z"/><circle cx="8.5" cy="14.5" r="1.5"/><circle cx="15.5" cy="14.5" r="1.5"/></svg>';
+var ICON_STAR_OUTLINE = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+var ICON_STAR_FILLED = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+var ICON_SEARCH = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+var ICON_HOME = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+var ICON_MOON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+var ICON_SUN = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
 (function () {
   var salvo = null;
   try { salvo = localStorage.getItem(THEME_KEY); } catch (e) {}
@@ -337,7 +346,7 @@ function buildLineCard(opts) {
     var fav = isFavorito(opts.stopId, opts.lineCode);
     var star = document.createElement("button");
     star.className = "star-btn" + (fav ? " fav" : "");
-    star.textContent = fav ? "★" : "☆";
+    star.innerHTML = fav ? ICON_STAR_FILLED : ICON_STAR_OUTLINE;
     star.onclick = function () {
       toggleFavorito({ stopId: opts.stopId, stopName: opts.stopName, lineCode: opts.lineCode, dest: opts.dest });
       render();
@@ -477,11 +486,11 @@ var nearState = { status: "idle", paradas: [] }; // idle | loading | ok | error
 function renderHome() {
   var page = document.getElementById("page");
   page.innerHTML =
-    '<div class="header"><div class="icon-badge">🚌</div><h1>Ônibus perto</h1></div>' +
+    '<div class="header"><div class="icon-badge">' + ICON_BUS + '</div><h1>Ônibus perto</h1></div>' +
     '<p class="subtitle">Suas linhas e paradas por perto</p>' +
-    '<div class="section-title">📍 Perto de você</div>' +
+    '<div class="section-title">' + ICON_PIN + ' Perto de você</div>' +
     '<div id="near"></div>' +
-    '<div class="section-title">⭐ Favoritos</div>' +
+    '<div class="section-title">' + ICON_STAR_FILLED + ' Favoritos</div>' +
     '<div class="cards" id="fav-cards"></div>';
 
   renderFavCardsInto("fav-cards");
@@ -536,7 +545,7 @@ function renderNearSection() {
       el.appendChild(item);
     });
   } else {
-    el.innerHTML = '<button class="near-btn" id="use-loc">📍 Usar minha localização</button>';
+    el.innerHTML = '<button class="near-btn" id="use-loc">' + ICON_PIN + ' Usar minha localização</button>';
     document.getElementById("use-loc").onclick = buscarParadasPerto;
   }
 }
@@ -577,7 +586,7 @@ function buscarParadasPerto() {
 function renderFavoritos() {
   var page = document.getElementById("page");
   page.innerHTML =
-    '<div class="header"><div class="icon-badge">⭐</div><h1>Favoritos</h1></div>' +
+    '<div class="header"><div class="icon-badge">' + ICON_STAR_FILLED + '</div><h1>Favoritos</h1></div>' +
     '<p class="subtitle">Todas as linhas que você favoritou</p>' +
     '<div class="cards" id="fav-cards-page"></div>';
   renderFavCardsInto("fav-cards-page", true);
@@ -591,7 +600,7 @@ function renderPonto(codigoParada, nome) {
   var page = document.getElementById("page");
   page.innerHTML =
     '<button class="back-btn" onclick="history.back()">‹ Voltar</button>' +
-    '<div class="header"><div class="icon-badge">📍</div><h1>' + (nome || "Parada") + '</h1></div>' +
+    '<div class="header"><div class="icon-badge">' + ICON_PIN + '</div><h1>' + (nome || "Parada") + '</h1></div>' +
     '<p class="subtitle">Ônibus que passam aqui</p>' +
     '<div class="cards" id="ponto-cards"><p class="near-msg">Carregando linhas…</p></div>';
 
@@ -648,7 +657,7 @@ function renderLinha(letreiro, stopIdRef) {
   var page = document.getElementById("page");
   page.innerHTML =
     '<button class="back-btn" onclick="history.back()">‹ Voltar</button>' +
-    '<div class="header"><div class="icon-badge">🚌</div><h1>' + letreiro + '</h1></div>' +
+    '<div class="header"><div class="icon-badge">' + ICON_BUS + '</div><h1>' + letreiro + '</h1></div>' +
     '<p class="subtitle" id="linha-subtitle">Carregando paradas…</p>' +
     '<div id="linha-cards" class="cards"><p class="near-msg">Carregando…</p></div>';
   setRefresh(null);
@@ -677,7 +686,7 @@ function renderLinha(letreiro, stopIdRef) {
           if (destaque) {
             var badge = document.createElement("p");
             badge.style.cssText = "font-size:12px;font-weight:600;color:var(--primary);margin:0 0 8px;";
-            badge.textContent = "📍 Mais próxima de você";
+            badge.innerHTML = ICON_PIN + ' Mais próxima de você';
             card.appendChild(badge);
           }
 
@@ -696,7 +705,7 @@ function renderLinha(letreiro, stopIdRef) {
           var fav = isFavorito(p.codigoParada, letreiro);
           var star = document.createElement("button");
           star.className = "star-btn" + (fav ? " fav" : "");
-          star.textContent = fav ? "★" : "☆";
+          star.innerHTML = fav ? ICON_STAR_FILLED : ICON_STAR_OUTLINE;
           star.onclick = function () {
             toggleFavorito({ stopId: p.codigoParada, stopName: p.nome, lineCode: letreiro, dest: data.destino });
             renderLista(idNaMaisProxima);
@@ -749,7 +758,7 @@ function renderBusca() {
   var page = document.getElementById("page");
   page.innerHTML =
     '<button class="back-btn" onclick="history.back()">‹ Voltar</button>' +
-    '<div class="header"><div class="icon-badge">🔍</div><h1>Buscar</h1></div>' +
+    '<div class="header"><div class="icon-badge">' + ICON_SEARCH + '</div><h1>Buscar</h1></div>' +
     '<p class="subtitle">Código de linha, nome da linha ou parada</p>' +
     '<input type="text" class="search-input" id="busca-input" placeholder="Ex: 938C-10, Faustolo, Paulista…" autofocus />' +
     '<div id="busca-results"></div>';
@@ -788,7 +797,7 @@ function executarBusca(termo) {
         var row = document.createElement("div");
         row.className = "result-row";
         row.innerHTML =
-          '<span class="r-icon">🚌</span><div><div class="r-text">' + l.letreiro + '</div>' +
+          '<span class="r-icon">' + ICON_BUS + '</span><div><div class="r-text">' + l.letreiro + '</div>' +
           '<div class="r-sub">→ ' + (l.destino || "") + '</div></div>';
         row.onclick = function () { goTo("#/linha/" + encodeURIComponent(l.letreiro) + "/"); };
         results.appendChild(row);
@@ -796,7 +805,7 @@ function executarBusca(termo) {
       paradas.forEach(function (p) {
         var row = document.createElement("div");
         row.className = "result-row";
-        row.innerHTML = '<span class="r-icon">📍</span><div class="r-text">' + p.nome + "</div>";
+        row.innerHTML = '<span class="r-icon">' + ICON_PIN + '</span><div class="r-text">' + p.nome + "</div>";
         row.onclick = function () { goTo("#/ponto/" + p.codigoParada + "/" + encodeURIComponent(p.nome)); };
         results.appendChild(row);
       });
